@@ -1,0 +1,2 @@
+# freqtrade
+freqtrade for future

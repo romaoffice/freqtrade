@@ -714,8 +714,7 @@ class FreqtradeBot(LoggingMixin):
                 self.strategy.timeframe,
                 analyzed_df
             )
-            print('signal got',buy, sell)
-        print('checking sell',sell)
+
         sell_rate = self.exchange.get_rate(trade.pair, refresh=True, side="sell")
         if self._check_and_execute_exit(trade, sell_rate, buy, sell, exit_tag):
             return True
@@ -1053,6 +1052,8 @@ class FreqtradeBot(LoggingMixin):
         return reason
 
     def _safe_exit_amount(self, pair: str, amount: float) -> float:
+        #roma office
+        return amount
         """
         Get sellable amount.
         Should be trade.amount - but will fall back to the available amount if necessary.
@@ -1067,8 +1068,8 @@ class FreqtradeBot(LoggingMixin):
         self.wallets.update()
         trade_base_currency = self.exchange.get_pair_base_currency(pair)
         #romaoffice to get position size
-        wallet_amount = self.wallets.get_free_position(trade_base_currency)
-        print('get position size=',wallet_amount,trade_base_currency)
+        wallet_amount = self.wallets.get_free_position(trade_base_currency+self.config['stake_currency'])
+        print('get position size=',wallet_amount,pair)
         #wallet_amount = self.wallets.get_free(trade_base_currency)
         logger.debug(f"{pair} - Wallet: {wallet_amount} - Trade-amount: {amount}")
         if wallet_amount >= amount:

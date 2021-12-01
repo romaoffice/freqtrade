@@ -132,9 +132,9 @@ class Wallets:
             currency = position.get('symbol', None)
             self._positions[currency] = Position(
                 currency,
-                position.get('positionAmt', None),
-                position.get('unrealizedProfit', None),
-                position.get('entryPrice', None),
+                float(position.get('positionAmt', 0)),
+                float(position.get('unrealizedProfit', 0)),
+                float(position.get('entryPrice', 0)),
                 position.get('positionSide', None)
             )
         

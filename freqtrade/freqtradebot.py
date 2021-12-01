@@ -174,6 +174,7 @@ class FreqtradeBot(LoggingMixin):
         # Without this, freqtrade my try to recreate stoploss_on_exchange orders
         # while selling is in process, since telegram messages arrive in an different thread.
         with self._exit_lock:
+            print('try=====close=====sell')            
             trades = Trade.get_open_trades()
             # First process current opened trades (positions)
             self.exit_positions(trades)

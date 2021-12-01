@@ -174,7 +174,6 @@ class FreqtradeBot(LoggingMixin):
         # Without this, freqtrade my try to recreate stoploss_on_exchange orders
         # while selling is in process, since telegram messages arrive in an different thread.
         with self._exit_lock:
-            print('try=====close=====sell')            
             trades = Trade.get_open_trades()
             # First process current opened trades (positions)
             self.exit_positions(trades)
@@ -715,8 +714,8 @@ class FreqtradeBot(LoggingMixin):
                 self.strategy.timeframe,
                 analyzed_df
             )
-
-        logger.debug('checking sell')
+            print('signal got',buy, sell)
+        print('checking sell',sell)
         sell_rate = self.exchange.get_rate(trade.pair, refresh=True, side="sell")
         if self._check_and_execute_exit(trade, sell_rate, buy, sell, exit_tag):
             return True
@@ -860,7 +859,7 @@ class FreqtradeBot(LoggingMixin):
         """
         Check and execute exit
         """
-
+        
         should_sell = self.strategy.should_sell(
             trade, exit_rate, datetime.now(timezone.utc), buy, sell,
             force_stoploss=self.edge.stoploss(trade.pair) if self.edge else 0
@@ -1067,7 +1066,10 @@ class FreqtradeBot(LoggingMixin):
         # Update wallets to ensure amounts tied up in a stoploss is now free!
         self.wallets.update()
         trade_base_currency = self.exchange.get_pair_base_currency(pair)
-        wallet_amount = self.wallets.get_free(trade_base_currency)
+        #romaoffice to get position size
+        wallet_amount = self.wallets.get_free_position(trade_base_currency)
+        print('get position size=',wallet_amount,trade_base_currency)
+        #wallet_amount = self.wallets.get_free(trade_base_currency)
         logger.debug(f"{pair} - Wallet: {wallet_amount} - Trade-amount: {amount}")
         if wallet_amount >= amount:
             return amount
@@ -1130,8 +1132,9 @@ class FreqtradeBot(LoggingMixin):
             # but we allow this value to be changed)
             order_type = self.strategy.order_types.get("forcesell", order_type)
 
-        print('=============try close trade=============')
+        #print('=============try close trade=============')
         amount = self._safe_exit_amount(trade.pair, trade.amount)
+        amount = trade.amount
         time_in_force = self.strategy.order_time_in_force['sell']
 
         if not strategy_safe_wrapper(self.strategy.confirm_trade_exit, default_retval=True)(

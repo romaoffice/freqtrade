@@ -24,6 +24,12 @@ class Wallet(NamedTuple):
     used: float = 0
     total: float = 0
 
+class Position(NamedTuple):
+    currency: str
+    positionAmt: float = 0
+    unrealizedProfit: float=0
+    entryPrice: float=0
+    positionSide: str ="BOTH"
 
 class Wallets:
 
@@ -32,9 +38,17 @@ class Wallets:
         self._log = log
         self._exchange = exchange
         self._wallets: Dict[str, Wallet] = {}
+        self._positions:Dict[str, Position] = {}
         self.start_cap = config['dry_run_wallet']
         self._last_wallet_refresh = 0
         self.update()
+
+    def get_free_position(self,currency:str)->float:
+        balance = self._positions.get(currency)
+        if balance:
+            return balance.positionAmt
+        else:
+            return 0
 
     def get_free(self, currency: str) -> float:
         
@@ -94,9 +108,10 @@ class Wallets:
             )
         self._wallets = _wallets
 
+    #roma office / update to get position in future
     def _update_live(self) -> None:
         balances = self._exchange.get_balances()
-
+        
         for currency in balances:
             if isinstance(balances[currency], dict):
                 self._wallets[currency] = Wallet(
@@ -109,6 +124,20 @@ class Wallets:
         for currency in deepcopy(self._wallets):
             if currency not in balances:
                 del self._wallets[currency]
+        
+        #romaoffice
+        positions = balances["info"]["positions"]
+        for position in positions:
+            #print('position=',position)
+            currency = position.get('symbol', None)
+            self._positions[currency] = Position(
+                currency,
+                position.get('positionAmt', None),
+                position.get('unrealizedProfit', None),
+                position.get('entryPrice', None),
+                position.get('positionSide', None)
+            )
+        
 
     def update(self, require_update: bool = True) -> None:
         """

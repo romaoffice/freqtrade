@@ -925,8 +925,7 @@ class Exchange:
 
         try:
             balances = self._api.fetch_balance()
-            
-            balances.pop("info", None)
+            #balances.pop("info", None)
             balances.pop("free", None)
             balances.pop("total", None)
             balances.pop("used", None)

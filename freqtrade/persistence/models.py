@@ -419,19 +419,29 @@ class LocalTrade():
             return
 
         logger.info('Updating trade (id=%s) ...', self.id)
-
-        if order_type in ('market', 'limit') and order['side'] == 'buy':
+        #roma office
+        if order_type in ('market', 'limit'):
+            #order['side'] == 'buy':
             # Update open rate and actual amount
-            self.open_rate = float(safe_value_fallback(order, 'average', 'price'))
-            self.amount = float(safe_value_fallback(order, 'filled', 'amount'))
-            self.recalc_open_trade_value()
             if self.is_open:
-                logger.info(f'{order_type.upper()}_BUY has been fulfilled for {self}.')
-            self.open_order_id = None
-        elif order_type in ('market', 'limit') and order['side'] == 'sell':
-            if self.is_open:
-                logger.info(f'{order_type.upper()}_SELL has been fulfilled for {self}.')
-            self.close(safe_value_fallback(order, 'average', 'price'))
+                logger.info(f'{order_type.upper()}_{order["side"].upper()} has been fulfilled for {self}.open order id ={self.open_order_id}')
+                if(self.sell_reason is None):
+                    self.open_rate = float(safe_value_fallback(order, 'average', 'price'))
+                    self.amount = float(safe_value_fallback(order, 'filled', 'amount'))
+                    if(order["side"]=='sell'):
+                        self.amount = -self.amount
+                    self.recalc_open_trade_value()
+                    self.open_order_id = None
+                else:
+                    self.close(safe_value_fallback(order, 'average', 'price'))
+
+
+            # elif order_type in ('market', 'limit') and self.open_order_id is  None:
+            #     if self.is_open:
+            #         logger.info(f'{order_type.upper()}_SELL has been fulfilled for {self}.')
+            #     self.open_order_id = None
+                #romaoffice
+                #self.close(safe_value_fallback(order, 'average', 'price'))
         elif order_type in ('stop_loss_limit', 'stop-loss', 'stop-loss-limit', 'stop'):
             self.stoploss_order_id = None
             self.close_rate_requested = self.stop_loss
@@ -441,6 +451,7 @@ class LocalTrade():
             self.close(safe_value_fallback(order, 'average', 'price'))
         else:
             raise ValueError(f'Unknown order type: {order_type}')
+
         Trade.commit()
 
     def close(self, rate: float, *, show_msg: bool = True) -> None:
@@ -565,7 +576,7 @@ class LocalTrade():
         )
         if self.open_trade_value == 0.0:
             return 0.0
-        profit_ratio = (close_trade_value / self.open_trade_value) - 1
+        profit_ratio = (close_trade_value / self.open_trade_value) - 1 if self.amount>0 else (self.open_trade_value / close_trade_value) - 1
         return float(f"{profit_ratio:.8f}")
 
     def select_order(self, order_side: str, is_open: Optional[bool]) -> Optional[Order]:

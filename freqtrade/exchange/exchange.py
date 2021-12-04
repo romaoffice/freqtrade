@@ -750,7 +750,6 @@ class Exchange:
 
             order = self._api.create_order(pair, ordertype, side,
                                            amount, rate_for_order, params)
-            print('Order result create_order',order)
             self._log_exchange_response('create_order', order)
             return order
 

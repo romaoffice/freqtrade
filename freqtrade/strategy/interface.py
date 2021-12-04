@@ -582,12 +582,13 @@ class IStrategy(ABC, HyperStrategyMixin):
             else:
                 raise StrategyError(message)
 
+    #romaoffice
     def get_signal(
         self,
         pair: str,
         timeframe: str,
         dataframe: DataFrame
-    ) -> Tuple[bool, bool, Optional[str], Optional[str]]:
+    ) -> Tuple[float, float, Optional[str], Optional[str]]:
         """
         Calculates current signal based based on the buy / sell columns of the dataframe.
         Used by Bot to get the signal to buy or sell
@@ -602,6 +603,7 @@ class IStrategy(ABC, HyperStrategyMixin):
 
         latest_date = dataframe['date'].max()
         latest = dataframe.loc[dataframe['date'] == latest_date].iloc[-1]
+        #romaoffice
         # Explicitly convert to arrow object to ensure the below comparison does not fail
         latest_date = arrow.get(latest_date)
 
@@ -615,11 +617,13 @@ class IStrategy(ABC, HyperStrategyMixin):
             )
             return False, False, None, None
 
-        buy = latest[SignalType.BUY.value] == 1
+        buy = 0#False
+        if SignalType.BUY.value in latest:
+            buy = latest[SignalType.BUY.value]# == 1
 
-        sell = False
+        sell = 0#False
         if SignalType.SELL.value in latest:
-            sell = latest[SignalType.SELL.value] == 1
+            sell = latest[SignalType.SELL.value]# == 1
 
         buy_tag = latest.get(SignalTagType.BUY_TAG.value, None)
         exit_tag = latest.get(SignalTagType.EXIT_TAG.value, None)
@@ -680,8 +684,8 @@ class IStrategy(ABC, HyperStrategyMixin):
         if (self.sell_profit_only and current_profit <= self.sell_profit_offset):
             # sell_profit_only and profit doesn't reach the offset - ignore sell signal
             pass
-        elif self.use_sell_signal and not buy:
-            if sell:
+        elif self.use_sell_signal and not(abs(buy)>0):
+            if sell!=0:
                 sell_signal = SellType.SELL_SIGNAL
             else:
                 custom_reason = strategy_safe_wrapper(self.custom_sell, default_retval=False)(

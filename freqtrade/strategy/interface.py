@@ -568,8 +568,8 @@ class IStrategy(ABC, HyperStrategyMixin):
         message = ""
         if dataframe is None:
             message = "No dataframe returned (return statement missing?)."
-        elif 'buy' not in dataframe:
-            message = "Buy column not set."
+        elif 'entry' not in dataframe:
+            message = "Entry column not set."
         elif df_len != len(dataframe):
             message = message_template.format("length")
         elif df_close != dataframe["close"].iloc[-1]:

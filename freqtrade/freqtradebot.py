@@ -175,7 +175,6 @@ class FreqtradeBot(LoggingMixin):
         with self._exit_lock:
             trades = Trade.get_open_trades()
             # First process current opened trades (positions)
-            print('process to close trade===',trades)
             self.exit_positions(trades)
 
         # Then looking for buy opportunities
@@ -707,8 +706,6 @@ class FreqtradeBot(LoggingMixin):
         if not trade.is_open:
             raise DependencyException(f'Attempt to handle closed trade: {trade}')
 
-        logger.info('Handling %s ...', trade)
-
         (buy, sell) = (0, 0)
         exit_tag = None
 
@@ -726,7 +723,6 @@ class FreqtradeBot(LoggingMixin):
         if self._check_and_execute_exit(trade, buy, sell, exit_tag):
             return True
 
-        logger.info('Found no sell signal for %s.', trade)
         return False
 
     def create_stoploss_order(self, trade: Trade, stop_price: float) -> bool:

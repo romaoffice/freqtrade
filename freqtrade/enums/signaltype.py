@@ -5,8 +5,8 @@ class SignalType(Enum):
     """
     Enum to distinguish between buy and sell signals
     """
-    BUY = "buy"
-    SELL = "sell"
+    BUY = "entry"
+    SELL = "exit"
 
 
 class SignalTagType(Enum):

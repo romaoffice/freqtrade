@@ -99,7 +99,7 @@ class Strategy001(IStrategy):
             (
                 dataframe['close'] < dataframe['open']
             ),
-            'buy'] = -1#-1.1
+            'entry'] = -1#-1.1
         #dataframe.loc[:,'buy'] = -1
         # if self.openbuy==False:
         #     dataframe.loc[:, 'buy'] = 1
@@ -119,7 +119,7 @@ class Strategy001(IStrategy):
             (
                 dataframe['close'] > dataframe['open']
             ),
-            'sell'] = 1
+            'exit'] = 1
         # # if self.openbuy==False:
         #print('set sell signal==========')
         #dataframe.loc[:, 'sell'] = 1

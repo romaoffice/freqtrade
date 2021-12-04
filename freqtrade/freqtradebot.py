@@ -1151,7 +1151,10 @@ class FreqtradeBot(LoggingMixin):
             order_type = self.strategy.order_types.get("forcesell", order_type)
 
         #print('=============try close trade=============')
-        amount = self._safe_exit_amount(trade.pair, abs(trade.amount))
+        amount = abs(self._safe_exit_amount(trade.pair, abs(trade.amount)))
+        if(amount==0.0): 
+            logger.warning(f"No position.")
+            return False
         #amount = trade.amount
         time_in_force = self.strategy.order_time_in_force[exitdirection]
 

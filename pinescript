@@ -1,0 +1,141 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Chris
+//@version=4
+
+
+SystemName = "Freq Strategy"
+TradeId = "Freq Strategy"
+
+InitCapital = 100000
+default_qty_value = 10
+commission_type=strategy.commission.percent
+InitCommission = 0.075
+InitPyramidMax = 1
+CalcOnorderFills = false
+CalcOnTick = true
+DefaultQtyType = strategy.percent_of_equity
+DefaultQtyValue = 10.0
+ommission_type=strategy.commission.percent
+Precision = 2
+Overlay=true
+
+
+strategy(
+     title=SystemName, 
+     shorttitle=SystemName, 
+     overlay=Overlay, 
+     pyramiding=InitPyramidMax, 
+     initial_capital=InitCapital, 
+     default_qty_type=DefaultQtyType,
+     default_qty_value=default_qty_value, 
+     commission_type=commission_type, 
+     commission_value=InitCommission, 
+     calc_on_order_fills=CalcOnorderFills, 
+     calc_on_every_tick=CalcOnTick,
+     process_orders_on_close=true,
+     max_bars_back=5000
+     )
+
+Length     = input(28, minval=1),
+Multiplier = input(3.11, minval=1)
+bardelay   = input(2,"Bar Delay",minval=1,step=1)
+inversehl  = false//input(false,"Inverse Method")
+reverse    = false//input(false, title="Trade reverse")
+
+
+trendcolor  = input(false,"Trend Color")
+candlecolor = input(false,"Candlestick Color")
+
+trailingmenu   = input("Normal","Trailing Method",options=["Normal","Re-entries","None"])
+trailinmode    = input("Auto","Trailing Percentage",options=["Auto","Custom"])
+
+usetrail       = trailingmenu!="None"//input(false,"Use Trailing Stop")
+longTrailPerc  = input(title="  Long Trailing  (%)", minval=0.0, step=0.1, defval=5.0) * 0.01
+shortTrailPerc = input(title="  Short Trailing (%)", minval=0.0, step=0.1, defval=5.0) * 0.01
+
+
+testPeriodSwitch = input(false, "Use Custom Test Period")
+testStartYear    = input(2010, "  From Year",minval=1)
+testStartMonth   = input(1, "  From Month",minval=1,maxval=12)
+testStartDay     = input(1, "  From Day",minval=1,maxval=31)
+testStartHour    = input(0, "  From Hour",minval=1,maxval=23)
+testPeriodStart  = timestamp(testStartYear,testStartMonth,testStartDay,testStartHour,0)
+testStopYear     = input(2050, "  To Year",minval=1)
+testStopMonth    = input(12, "  To Month",minval=1,maxval=12)
+testStopDay      = input(31, "  To Day",minval=1,maxval=31)
+testStopHour     = input(23, "  To Hour",minval=1,maxval=23)
+testPeriodStop   = timestamp(testStopYear,testStopMonth,testStopDay,testStopHour,0)
+testPeriod()    => time >= testPeriodStart and time <= testPeriodStop ? true : false
+isPeriod         = testPeriodSwitch == true ? testPeriod() : true
+
+
+avgTR      = wma(atr(1), Length)
+highestC   = inversehl? lowest (Length):highest(Length)
+lowestC    = inversehl? highest(Length):lowest (Length)
+hiLimit    = highestC[1] - (avgTR[1] * Multiplier)
+loLimit    = lowestC [1] + (avgTR[1] * Multiplier)
+
+
+ret=0.0
+ret := iff(close > hiLimit and close > loLimit, hiLimit,
+       iff(close < loLimit and close < hiLimit, loLimit, nz(ret[1], close)))
+pos = 0.0
+pos := iff(close > ret, 1,
+	   iff(close < ret, -1, nz(pos[1], 0))) 
+
+colortrend= pos == -1 ? color.red: pos == 1 ? color.teal : na  
+    
+barcolor(candlecolor?colortrend:na,title="Candlestick Color")
+plot(ret, color= trendcolor?colortrend:color.blue , title="Trend Trader",linewidth=2)
+
+
+enterLong  = pos ==  1  and (trailingmenu=="Normal"? pos!=pos[1] : true)  and rising (close,bardelay) and isPeriod
+enterShort = pos == -1  and (trailingmenu=="Normal"? pos!=pos[1] : true)  and falling(close,bardelay) and isPeriod
+
+exit=false
+
+trade  = 0.0
+trade := enterLong[0]  ?  1:
+         enterShort[0] ? -1:
+         trade[1]
+        
+
+
+longStopPrice = 0.0, shortStopPrice = 0.0
+
+autox= atr(20) 
+longStopPrice := if (trade == 1)
+    stopValue = (trailinmode== "Auto"? hl2 - 1 * autox : close * (1 - longTrailPerc)) 
+    max(stopValue, longStopPrice[1])
+else
+    0
+
+shortStopPrice := if (trade == -1)
+    stopValue = (trailinmode== "Auto"? hl2 + 1 * autox : close * (1 + shortTrailPerc))
+    min(stopValue, shortStopPrice[1])
+else 
+    999999
+
+Long_exit  = trade ==  1 and  usetrail and low  < longStopPrice[1] and open > longStopPrice [1] 
+
+Short_exit = trade == -1 and  usetrail and high > shortStopPrice[1] and open < shortStopPrice[1] 
+
+if Long_exit or Short_exit
+
+    trade:= 0
+
+plot(trade ==  1 and usetrail ? longStopPrice  : na, color=#008000 , style= plot.style_linebr,linewidth=2, title="Long Trail Stop" )
+plot(trade == -1 and usetrail ? shortStopPrice : na, color=#FF0000 , style= plot.style_linebr,linewidth=2, title="Short Trail Stop")
+
+// plotshape(trade== 1 and trade[1]!=  1?close:na, title="Long Label", style=shape.labelup, location= location.belowbar, color=color.green, text="Long", textcolor=color.white,offset=0)
+// plotshape(trade==-1 and trade[1]!= -1?close:na, title="Short Label", style=shape.labeldown, location= location.abovebar, color=color.red, text="Short", textcolor=color.white,offset=0)
+
+
+if (enterLong)
+    strategy.entry(id="LONG", long=true)
+if (enterShort)
+    strategy.entry(id="SELL", long=false)
+if usetrail
+    strategy.exit("LONG TS","LONG", stop=longStopPrice[0])
+
+    strategy.exit("SHORT TS","SELL", stop=shortStopPrice[0])

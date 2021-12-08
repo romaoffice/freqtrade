@@ -10,7 +10,7 @@ import talib.abstract as ta
 import freqtrade.vendor.qtpylib.indicators as qtpylib
 
 
-class Strategy001(IStrategy):
+class new_turtle(IStrategy):
 
     # Minimal ROI designed for the strategy.
     # This attribute will be overridden if the config file contains "minimal_roi"
@@ -23,7 +23,7 @@ class Strategy001(IStrategy):
 
     # Optimal stoploss designed for the strategy
     # This attribute will be overridden if the config file contains "stoploss"
-    stoploss = -0.10
+    stoploss = -30
 
     # Optimal timeframe for the strategy
     timeframe = '1m'
@@ -135,7 +135,7 @@ class Strategy001(IStrategy):
             if dataframe.loc[i,'pos'] ==  -1 and \
                (self.trailingmenu!="Normal" or (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos'] ) and \
                falling:
-               dataframe.loc[i,'enterShort']=True        
+               dataframe.loc[i,'enterShort']=True      
 
         retrun dataframe
 

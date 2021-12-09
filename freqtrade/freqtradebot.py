@@ -174,9 +174,9 @@ class FreqtradeBot(LoggingMixin):
         if len(analyzed_df)<1 or self.lasttime == analyzed_df.iloc[-1]['date']:
             return
         self.lasttime = analyzed_df.iloc[-1]['date']
-        print('============dataframe data =======\n')
-        print(analyzed_df.tail(1))
-        print('===================================\n')
+        logger.info('============dataframe data =======\n')
+        logger.info(analyzed_df.tail(1))
+        logger.info('===================================\n')
 
         with self._exit_lock:
             # Check and handle any timed out open orders

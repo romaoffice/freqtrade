@@ -37,4 +37,4 @@ strategy = StrategyResolver.load_strategy(config)
 
 # # Generate buy/sell signals using strategy
 df = strategy.analyze_ticker(candles, {'pair': pair})
-df.tail()
+print(df.tail(n=20))

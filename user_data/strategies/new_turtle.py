@@ -15,10 +15,10 @@ class new_turtle(IStrategy):
     # Minimal ROI designed for the strategy.
     # This attribute will be overridden if the config file contains "minimal_roi"
     minimal_roi = {
-        "60":  0.01,
-        "30":  0.03,
-        "20":  0.04,
-        "0":  0.05
+        "60":  0.101,
+        "30":  0.103,
+        "20":  0.104,
+        "0":  0.105
     }
 
     # Optimal stoploss designed for the strategy
@@ -33,14 +33,12 @@ class new_turtle(IStrategy):
     trailing_stop_positive = 0.01
     trailing_stop_positive_offset = 0.02
 
-    # run "populate_indicators" only for new candle
-    process_only_new_candles = False
-
     # Experimental settings (configuration will overide these if set)
     use_sell_signal = True
     sell_profit_only = False
     ignore_roi_if_buy_signal = False
     
+
     # Optional order type mapping
     order_types = {
         'buy': 'market',
@@ -48,8 +46,8 @@ class new_turtle(IStrategy):
         'stoploss': 'market',
         'stoploss_on_exchange': False
     }
-
-    length = 28
+    
+    Length = 28
     Multiplier = 3.11
     bardelay = 2
     trailingmenu = "Normal"#options=["Normal","Re-entries","None"]
@@ -88,7 +86,7 @@ class new_turtle(IStrategy):
         dataframe['hiLimit'] = dataframe['highestC']-dataframe['avgTR']*self.Multiplier
         dataframe['loLimit'] = dataframe['lowestC']+dataframe['avgTR']*self.Multiplier
         
-        dataframe.loc[0, 'ret'] = df.loc[0, 'loLimit']
+        dataframe.loc[0, 'ret'] = dataframe.loc[0, 'loLimit']
         for i in range(1, len(dataframe)):
             if dataframe.loc[i,'close']>dataframe.loc[i,'hiLimit'] and \
                dataframe.loc[i,'close']>dataframe.loc[i,'loLimit'] :
@@ -103,7 +101,7 @@ class new_turtle(IStrategy):
                     else:
                      dataframe.loc[i,'ret'] = dataframe.loc[i-1,'ret']
 
-        dataframe.loc[0, 'pos'] = df.loc[0, 'ret']
+        dataframe.loc[0, 'pos'] = dataframe.loc[0, 'ret']
         for i in range(1, len(dataframe)):
             if dataframe.loc[i,'close']>dataframe.loc[i,'ret']:
                dataframe.loc[i,'pos'] = 1
@@ -116,28 +114,32 @@ class new_turtle(IStrategy):
                     else:
                      dataframe.loc[i,'pos'] = dataframe.loc[i-1,'pos']
 
-        dataframe.loc[0, 'enterLong'] = df.loc[0, 'pos']
+        dataframe.loc[0, 'enterLong'] = dataframe.loc[0, 'pos']
+        for i in range(1,self.bardelay):
+            dataframe.loc[i,'enterLong']=False        
+            dataframe.loc[i,'enterShort']=False        
         for i in range(1+self.bardelay, len(dataframe)):
             rising = True
             falling = True
             dataframe.loc[i,'enterLong']=False        
-            dataframe.loc[i,'enterShort']=False        
+            dataframe.loc[i,'enterShort']=False
             for j in range(1,self.bardelay):
                 if(dataframe.loc[i,'close']<dataframe.loc[i-j,'close']):
                     rising = False
                 if(dataframe.loc[i,'close']>dataframe.loc[i-j,'close']):
                     falling = False
             if dataframe.loc[i,'pos'] ==  1 and \
-               (self.trailingmenu!="Normal" or (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos'] ) and \
+               (self.trailingmenu!="Normal" or (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos'] )) and \
                rising:
                dataframe.loc[i,'enterLong']=True        
             
             if dataframe.loc[i,'pos'] ==  -1 and \
-               (self.trailingmenu!="Normal" or (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos'] ) and \
+               (self.trailingmenu!="Normal" or (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos'] )) and \
                falling:
                dataframe.loc[i,'enterShort']=True      
-
-        retrun dataframe
+        
+        
+        return dataframe
 
 
     def populate_buy_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
@@ -148,15 +150,14 @@ class new_turtle(IStrategy):
         """
         dataframe.loc[
             (
-                dataframe['enterLong']
+                dataframe['enterLong']==True
             ),
             'entry'] = 1#-1.1
         dataframe.loc[
             (
-                dataframe['enterShort']
+                dataframe['enterShort']==True
             ),
             'entry'] = -1#-1.1
-
         return dataframe
 
     def populate_sell_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
@@ -167,7 +168,7 @@ class new_turtle(IStrategy):
         """
         dataframe.loc[
             (
-                dataframe['enterLong'] or dataframe['enterShort']
+                (dataframe['enterLong']  | dataframe['enterShort'])
             ),
-            'exit'] = 1#-1.1
+            'exit'] = 1#-1.
         return dataframe

@@ -7,7 +7,7 @@ import warnings
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple, Union
-
+import math
 import arrow
 from pandas import DataFrame
 
@@ -568,8 +568,6 @@ class IStrategy(ABC, HyperStrategyMixin):
         message = ""
         if dataframe is None:
             message = "No dataframe returned (return statement missing?)."
-        elif 'entry' not in dataframe:
-            message = "Entry column not set."
         elif df_len != len(dataframe):
             message = message_template.format("length")
         elif df_close != dataframe["close"].iloc[-1]:
@@ -619,11 +617,11 @@ class IStrategy(ABC, HyperStrategyMixin):
 
         buy = 0#False
         if SignalType.BUY.value in latest:
-            buy = latest[SignalType.BUY.value]# == 1
+            buy = 0 if math.isnan(latest[SignalType.BUY.value]) else latest[SignalType.BUY.value]
 
         sell = 0#False
         if SignalType.SELL.value in latest:
-            sell = latest[SignalType.SELL.value]# == 1
+            sell = 0 if math.isnan(latest[SignalType.SELL.value]) else latest[SignalType.SELL.value]
 
         buy_tag = latest.get(SignalTagType.BUY_TAG.value, None)
         exit_tag = latest.get(SignalTagType.EXIT_TAG.value, None)
@@ -684,8 +682,8 @@ class IStrategy(ABC, HyperStrategyMixin):
         if (self.sell_profit_only and current_profit <= self.sell_profit_offset):
             # sell_profit_only and profit doesn't reach the offset - ignore sell signal
             pass
-        elif self.use_sell_signal and not(abs(buy)>0):
-            if sell!=0:
+        elif self.use_sell_signal :
+            if sell>0:
                 sell_signal = SellType.SELL_SIGNAL
             else:
                 custom_reason = strategy_safe_wrapper(self.custom_sell, default_retval=False)(

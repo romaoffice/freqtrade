@@ -9,13 +9,14 @@
     "timeframe": "1m",
     "dry_run": false,
     "cancel_open_orders_on_exit": false,
+    
     "unfilledtimeout": {
         "buy": 10,
         "sell": 30,
         "unit": "minutes"
     },
     "bid_strategy": {
-        "price_side": "bid",
+        "price_side": "ask",
         "ask_last_balance": 0.0,
         "use_order_book": true,
         "order_book_top": 1,
@@ -25,7 +26,7 @@
         }
     },
     "ask_strategy": {
-        "price_side": "ask",
+        "price_side": "bid",
         "use_order_book": true,
         "order_book_top": 1
     },

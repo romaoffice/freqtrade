@@ -47,6 +47,8 @@ class FreqtradeBot(LoggingMixin):
         :param config: configuration dict, you can use Configuration.get_config()
         to get the config dict.
         """
+        #romaoffice
+        self.lasttime = None
         self.active_pair_whitelist: List[str] = []
 
         logger.info('Starting freqtrade %s', __version__)
@@ -149,6 +151,8 @@ class FreqtradeBot(LoggingMixin):
         """
 
         # Check whether markets have to be reloaded and reload them when it's needed
+        #romaoffuce
+
         self.exchange.reload_markets()
 
         self.update_closed_trades_without_assigned_fees()
@@ -164,6 +168,14 @@ class FreqtradeBot(LoggingMixin):
         strategy_safe_wrapper(self.strategy.bot_loop_start, supress_error=True)()
 
         self.strategy.analyze(self.active_pair_whitelist)
+
+        pairs = self.active_pair_whitelist
+        analyzed_df, _ = self.dataprovider.get_analyzed_dataframe(pairs[0], self.strategy.timeframe)
+        if len(analyzed_df)<1 or self.lasttime == analyzed_df.iloc[-1]['date']:
+            return
+        self.lasttime = analyzed_df.iloc[-1]['date']
+        print('==============================check datetime=',self.lasttime)
+        print('dataframe data =======',analyzed_df.tail(1))
 
         with self._exit_lock:
             # Check and handle any timed out open orders
@@ -399,7 +411,6 @@ class FreqtradeBot(LoggingMixin):
 
         :return: True if a trade has been created.
         """
-        logger.info(f"create_trade for pair {pair}")
 
         analyzed_df, _ = self.dataprovider.get_analyzed_dataframe(pair, self.strategy.timeframe)
         nowtime = analyzed_df.iloc[-1]['date'] if len(analyzed_df) > 0 else None
@@ -426,8 +437,8 @@ class FreqtradeBot(LoggingMixin):
             self.strategy.timeframe,
             analyzed_df
         )
-        logger.info(f"signal {buy},{sell}")
-        if abs(buy)>0 and not (abs(sell)>0):
+        print('create_trade',buy,sell)
+        if abs(buy)>0 :
             stake_amount = self.wallets.get_trade_stake_amount(pair, self.edge)
             bid_check_dom = self.config.get('bid_strategy', {}).get('check_depth_of_market', {})
             if ((bid_check_dom.get('enabled', False)) and
@@ -677,6 +688,7 @@ class FreqtradeBot(LoggingMixin):
         """
         trades_closed = 0
         for trade in trades:
+
             try:
                 
                 if (self.strategy.order_types.get('stoploss_on_exchange') and
@@ -684,6 +696,7 @@ class FreqtradeBot(LoggingMixin):
                     trades_closed += 1
                     Trade.commit()
                     continue
+                print('checking close===',trade.open_order_id,trade.is_open)
                 # Check if we can sell our current pair
                 if trade.open_order_id is None and trade.is_open and self.handle_trade(trade):
                     trades_closed += 1
@@ -786,7 +799,7 @@ class FreqtradeBot(LoggingMixin):
                                     stoploss_order=True)
             # Lock pair for one candle to prevent immediate rebuys
             self.strategy.lock_pair(trade.pair, datetime.now(timezone.utc),
-                                    reason='Auto lock')
+                                     reason='Auto lock')
             self._notify_exit(trade, "stoploss")
             return True
 
@@ -1167,7 +1180,6 @@ class FreqtradeBot(LoggingMixin):
 
         try:
             # Execute sell and update trade record
-            print("sell param===",trade.pair,order_type,exitdirection,amount,limit,time_in_force)
             order = self.exchange.create_order(pair=trade.pair,
                                                ordertype=order_type, side=exitdirection,
                                                amount=amount, rate=limit,
@@ -1192,8 +1204,9 @@ class FreqtradeBot(LoggingMixin):
         Trade.commit()
 
         # Lock pair for one candle to prevent immediate re-buys
-        self.strategy.lock_pair(trade.pair, datetime.now(timezone.utc),
-                                reason='Auto lock')
+        # romaoffice
+        # self.strategy.lock_pair(trade.pair, datetime.now(timezone.utc),
+        #                         reason='Auto lock')
 
         self._notify_exit(trade, order_type)
 

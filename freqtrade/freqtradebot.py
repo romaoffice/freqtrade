@@ -169,14 +169,6 @@ class FreqtradeBot(LoggingMixin):
 
         self.strategy.analyze(self.active_pair_whitelist)
 
-        pairs = self.active_pair_whitelist
-        analyzed_df, _ = self.dataprovider.get_analyzed_dataframe(pairs[0], self.strategy.timeframe)
-        if len(analyzed_df)<1 or self.lasttime == analyzed_df.iloc[-1]['date']:
-            return
-        self.lasttime = analyzed_df.iloc[-1]['date']
-        logger.info('============dataframe data =======\n')
-        logger.info(analyzed_df.tail(1))
-        logger.info('===================================\n')
 
         with self._exit_lock:
             # Check and handle any timed out open orders
@@ -190,6 +182,14 @@ class FreqtradeBot(LoggingMixin):
             # First process current opened trades (positions)
             self.exit_positions(trades)
 
+        pairs = self.active_pair_whitelist
+        analyzed_df, _ = self.dataprovider.get_analyzed_dataframe(pairs[0], self.strategy.timeframe)
+        if len(analyzed_df)<1 or self.lasttime == analyzed_df.iloc[-1]['date']:
+            return
+        self.lasttime = analyzed_df.iloc[-1]['date']
+        logger.info('============dataframe data =======\n')
+        logger.info(analyzed_df.tail(1))
+        logger.info('===================================\n')
         # Then looking for buy opportunities
             #romaoffice
         if self.get_free_open_trades():
@@ -438,7 +438,6 @@ class FreqtradeBot(LoggingMixin):
             self.strategy.timeframe,
             analyzed_df
         )
-        print('create_trade',buy,sell)
         if abs(buy)>0 :
             stake_amount = self.wallets.get_trade_stake_amount(pair, self.edge)
             bid_check_dom = self.config.get('bid_strategy', {}).get('check_depth_of_market', {})

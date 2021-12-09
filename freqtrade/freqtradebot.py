@@ -174,8 +174,9 @@ class FreqtradeBot(LoggingMixin):
         if len(analyzed_df)<1 or self.lasttime == analyzed_df.iloc[-1]['date']:
             return
         self.lasttime = analyzed_df.iloc[-1]['date']
-        print('==============================check datetime=',self.lasttime)
-        print('dataframe data =======',analyzed_df.tail(1))
+        print('============dataframe data =======\n')
+        print(analyzed_df.tail(1))
+        print('===================================\n')
 
         with self._exit_lock:
             # Check and handle any timed out open orders
@@ -696,7 +697,6 @@ class FreqtradeBot(LoggingMixin):
                     trades_closed += 1
                     Trade.commit()
                     continue
-                print('checking close===',trade.open_order_id,trade.is_open)
                 # Check if we can sell our current pair
                 if trade.open_order_id is None and trade.is_open and self.handle_trade(trade):
                     trades_closed += 1

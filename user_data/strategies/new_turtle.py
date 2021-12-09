@@ -138,7 +138,70 @@ class new_turtle(IStrategy):
                falling:
                dataframe.loc[i,'enterShort']=True      
         
-        
+            
+        dataframe.loc[0, 'trade'] = dataframe.loc[0, 'pos']
+        dataframe.loc[0, 'longStopPrice'] = dataframe.loc[0, 'pos']
+        dataframe.loc[0, 'shortStopPrice'] = dataframe.loc[0, 'pos']
+        dataframe.loc[0, 'Long_exit'] = dataframe.loc[0, 'pos']
+        dataframe.loc[0, 'Short_exit'] = dataframe.loc[0, 'pos']
+
+        for i in range(1, len(dataframe)):
+            if dataframe.loc[i,'enterLong'] :
+                dataframe.loc[i,'trade'] =1
+            else:
+                if dataframe.loc[i,'enterShort']:
+                    dataframe.loc[i,'trade'] =-1
+                else:
+                    if i==1 :
+                     dataframe.loc[i,'trade'] = 0
+                    else:
+                     dataframe.loc[i,'trade'] = dataframe.loc[i-1,'trade']
+
+            if(dataframe.loc[i,'trade']==1):
+                stopValue = 0.0
+                if(self.trailinmode== "Auto"):
+                    stopValue = (dataframe.loc[i, 'high']+dataframe.loc[i, 'low'])/2 - 1 * dataframe.loc[i, 'avgTR']  
+                else:
+                    stopValue = dataframe.loc[i, 'close'] * (1 - self.longTrailPerc) 
+                dataframe.loc[i, 'longStopPrice'] = stopValue
+                if i>1:
+                    if stopValue>dataframe.loc[i-1, 'longStopPrice']:
+                        dataframe.loc[i, 'longStopPrice'] = stopValue
+                    else:
+                        dataframe.loc[i, 'longStopPrice'] = dataframe.loc[i-1, 'longStopPrice']
+            else:
+                dataframe.loc[i, 'longStopPrice'] = 0
+
+            if(dataframe.loc[i,'trade']==-1):
+                stopValue = 0.0
+                if(self.trailinmode== "Auto"):
+                    stopValue = (dataframe.loc[i, 'high']+dataframe.loc[i, 'low'])/2 + 1 * dataframe.loc[i, 'avgTR']  
+                else:
+                    stopValue = dataframe.loc[i, 'close'] * (1 + self.shortTrailPerc) 
+                dataframe.loc[i, 'shortStopPrice'] = stopValue
+                if i>1:
+                    if stopValue<dataframe.loc[i-1, 'shortStopPrice']:
+                        dataframe.loc[i, 'shortStopPrice'] = stopValue
+                    else:
+                        dataframe.loc[i, 'shortStopPrice'] = dataframe.loc[i-1, 'shortStopPrice']
+            else:
+                dataframe.loc[i, 'shortStopPrice'] = 999999
+
+            dataframe.loc[i, 'Long_exit'] = False
+            if(dataframe.loc[i, 'trade']==1 and self.usetrail and \
+                dataframe.loc[i, 'low']<dataframe.loc[i, 'longStopPrice'] and \
+                dataframe.loc[i, 'open']>dataframe.loc[i, 'longStopPrice'] 
+                ):
+                dataframe.loc[i, 'Long_exit'] = True
+            dataframe.loc[i, 'Short_exit'] = False
+            if(dataframe.loc[i, 'trade']==-1 and self.usetrail and \
+                dataframe.loc[i, 'high']>dataframe.loc[i, 'shortStopPrice'] and \
+                dataframe.loc[i, 'open']<dataframe.loc[i, 'shortStopPrice'] 
+                ):
+                dataframe.loc[i, 'Short_exit'] = True
+            if dataframe.loc[i, 'Long_exit'] or dataframe.loc[i, 'Short_exit']:
+                dataframe.loc[i, 'trade'] = 0
+
         return dataframe
 
 
@@ -168,7 +231,11 @@ class new_turtle(IStrategy):
         """
         dataframe.loc[
             (
-                (dataframe['enterLong']  | dataframe['enterShort'])
+                (dataframe['enterLong']  | \
+                 dataframe['enterShort'] | \
+                 dataframe['Long_exit'] | \
+                 dataframe['Short_exit'] \
+                    )
             ),
             'exit'] = 1#-1.
         return dataframe

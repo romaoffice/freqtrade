@@ -28,7 +28,7 @@ candles = load_pair_history(datadir=data_location,
                             )
 
 # Confirm success
-print("Loaded " + str(len(candles)) + f" rows of data for {pair} from {data_location}")
+
 candles.tail()
 
 # # Load strategy using values set above
@@ -37,4 +37,4 @@ strategy = StrategyResolver.load_strategy(config)
 
 # # Generate buy/sell signals using strategy
 df = strategy.analyze_ticker(candles, {'pair': pair})
-print(df.tail(n=20))
+print(df.tail(n=30))

@@ -47,7 +47,7 @@ class new_turtle(IStrategy):
     Length = 28
     Multiplier = 3.11
     bardelay = 2
-    trailingmenu = "Normal"#options=["Normal","Re-entries","None"]
+    trailingmenu = "None"#options=["Normal","Re-entries","None"]
     trailinmode = "Auto"#options=["Auto","Custom"]
     usetrail = True if trailingmenu!="None" else False
     longTrailPerc = 5*0.01
@@ -77,7 +77,7 @@ class new_turtle(IStrategy):
 
         dataframe['_avgTR'] = ta.ATR(dataframe, 1)
         dataframe.loc[0, 'avgTR'] = dataframe.loc[0, '_avgTR']
-        for i in range(1, len(dataframe)):
+        for i in range(0, len(dataframe)):
             if(i>self.Length):
                 _norm = 0.0
                 _sum = 0.0
@@ -95,7 +95,7 @@ class new_turtle(IStrategy):
         dataframe['loLimit'] = dataframe['lowestC']+dataframe['avgTR']*self.Multiplier
         
         dataframe.loc[0, 'ret'] = dataframe.loc[0, 'loLimit']
-        for i in range(1, len(dataframe)):
+        for i in range(0, len(dataframe)):
             if dataframe.loc[i,'close']>dataframe.loc[i,'hiLimit'] and \
                dataframe.loc[i,'close']>dataframe.loc[i,'loLimit'] :
                dataframe.loc[i,'ret'] = dataframe.loc[i,'hiLimit']
@@ -104,13 +104,13 @@ class new_turtle(IStrategy):
                    dataframe.loc[i,'close']<dataframe.loc[i,'loLimit'] :
                    dataframe.loc[i,'ret'] = dataframe.loc[i,'loLimit']
                 else:
-                    if i==1 :
+                    if i<=1 :
                      dataframe.loc[i,'ret'] = dataframe.loc[i,'close']
                     else:
                      dataframe.loc[i,'ret'] = dataframe.loc[i-1,'ret']
 
         dataframe.loc[0, 'pos'] = dataframe.loc[0, 'ret']
-        for i in range(1, len(dataframe)):
+        for i in range(0, len(dataframe)):
             if (dataframe.loc[i,'avgTR']>0):
                 if dataframe.loc[i,'close']>dataframe.loc[i,'ret']:
                    dataframe.loc[i,'pos'] = 1
@@ -125,48 +125,57 @@ class new_turtle(IStrategy):
             else:
                 dataframe.loc[i,'pos'] = 0
 
+        dataframe.loc[0, 'rising'] = dataframe.loc[0, 'pos']
+        dataframe.loc[0, 'falling'] = dataframe.loc[0, 'pos']
         dataframe.loc[0, 'enterLong'] = dataframe.loc[0, 'pos']
-        for i in range(1,self.bardelay):
+        dataframe.loc[0, 'trade'] = dataframe.loc[0, 'pos']
+
+        for i in range(0,self.bardelay):
             dataframe.loc[i,'enterLong']=False        
             dataframe.loc[i,'enterShort']=False        
         for i in range(1+self.bardelay, len(dataframe)):
             rising = True
             falling = True
+            for j in range(1,self.bardelay+1):
+                if(dataframe.loc[i-j+1,'close']<dataframe.loc[i-j,'close']):
+                    rising = False
+                if(dataframe.loc[i-j+1,'close']>dataframe.loc[i-j,'close']):
+                    falling = False
+            dataframe.loc[i, 'rising'] = rising
+            dataframe.loc[i, 'falling'] = falling
+
             dataframe.loc[i,'enterLong']=False        
             dataframe.loc[i,'enterShort']=False
-            for j in range(1,self.bardelay):
-                if(dataframe.loc[i,'close']<dataframe.loc[i-j,'close']):
-                    rising = False
-                if(dataframe.loc[i,'close']>dataframe.loc[i-j,'close']):
-                    falling = False
             if dataframe.loc[i,'pos'] ==  1 and \
-               (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos'] ) and \
-               rising:
+               (self.trailingmenu != "Normal" or (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos']) ) and \
+               dataframe.loc[i, 'rising'] and \
+               i>1+self.bardelay and dataframe.loc[i-1, 'trade']!=1 :
                dataframe.loc[i,'enterLong']=True        
             
             if dataframe.loc[i,'pos'] ==  -1 and \
-               (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos'] ) and \
-               falling:
+               (self.trailingmenu != "Normal" or (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos']) ) and \
+               dataframe.loc[i, 'falling'] and \
+               i>1+self.bardelay and dataframe.loc[i-1, 'trade']!=-1 :
                dataframe.loc[i,'enterShort']=True      
-        
-            
-        dataframe.loc[0, 'trade'] = dataframe.loc[0, 'pos']
-        dataframe.loc[0, 'longStopPrice'] = dataframe.loc[0, 'pos']
-        dataframe.loc[0, 'shortStopPrice'] = dataframe.loc[0, 'pos']
-        dataframe.loc[0, 'Long_exit'] = dataframe.loc[0, 'pos']
-        dataframe.loc[0, 'Short_exit'] = dataframe.loc[0, 'pos']
 
-        for i in range(1, len(dataframe)):
             if dataframe.loc[i,'enterLong'] :
                 dataframe.loc[i,'trade'] =1
             else:
                 if dataframe.loc[i,'enterShort']:
                     dataframe.loc[i,'trade'] =-1
                 else:
-                    if i==1 :
+                    if i<=1 :
                      dataframe.loc[i,'trade'] = 0
                     else:
                      dataframe.loc[i,'trade'] = dataframe.loc[i-1,'trade']
+        
+            
+        dataframe.loc[0, 'longStopPrice'] = dataframe.loc[0, 'pos']
+        dataframe.loc[0, 'shortStopPrice'] = dataframe.loc[0, 'pos']
+        dataframe.loc[0, 'Long_exit'] = dataframe.loc[0, 'pos']
+        dataframe.loc[0, 'Short_exit'] = dataframe.loc[0, 'pos']
+
+        for i in range(0, len(dataframe)):
 
             if(dataframe.loc[i,'trade']==1):
                 stopValue = 0.0

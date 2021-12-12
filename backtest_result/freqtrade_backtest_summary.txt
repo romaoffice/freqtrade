@@ -1,0 +1,48 @@
+Initial param:
+    Length = 28
+    Multiplier = 3.11
+    bardelay = 2
+    trailingmenu = "Normal"#options=["Normal","Re-entries","None"]
+    trailinmode = "Auto"#options=["Auto","Custom"]
+    usetrail = True if trailingmenu!="None" else False
+    longTrailPerc = 5*0.01
+    shortTrailPerc = 5 * 0.01
+
+=============== SUMMARY METRICS ================
+| Metric                 | Value               |
+|------------------------+---------------------|
+| Backtesting from       | 2019-09-08 00:00:00 |
+| Backtesting to         | 2021-12-10 00:00:00 |
+| Max open trades        | 1                   |
+|                        |                     |
+| Total/Daily Avg Trades | 30 / 0.04           |
+| Starting balance       | 1000.000 USDT       |
+| Final balance          | 1061.669 USDT       |
+| Absolute profit        | 61.669 USDT         |
+| Total profit %         | 6.17%               |
+| Trades per day         | 0.04                |
+| Avg. daily profit %    | 0.01%               |
+| Avg. stake amount      | 0.000 USDT          |
+| Total trade volume     | 0.000 USDT          |
+|                        |                     |
+| Best Pair              | BTC/USDT 71.95%     |
+| Worst Pair             | BTC/USDT 71.95%     |
+| Best trade             | BTC/USDT 37.85%     |
+| Worst trade            | BTC/USDT -11.59%    |
+| Best day               | 37.854 USDT         |
+| Worst day              | -12.826 USDT        |
+| Days win/draw/lose     | 12 / 735 / 18       |
+| Avg. Duration Winners  | 10 days, 18:00:00   |
+| Avg. Duration Loser    | 3 days, 20:00:00    |
+| Rejected Buy signals   | 0                   |
+|                        |                     |
+| Min balance            | 1003.630 USDT       |
+| Max balance            | 1072.742 USDT       |
+| Drawdown               | 28.24%              |
+| Drawdown               | 29.749 USDT         |
+| Drawdown high          | 72.742 USDT         |
+| Drawdown low           | 42.993 USDT         |
+| Drawdown Start         | 2021-08-19 00:00:00 |
+| Drawdown End           | 2021-10-02 00:00:00 |
+| Market change          | 353.60%             |
+================================================

@@ -75,7 +75,18 @@ class new_turtle(IStrategy):
         or your hyperopt configuration, otherwise you will waste your memory and CPU usage.
         """
 
-        dataframe['avgTR'] = ta.ATR(dataframe, timeperiod=self.Length)
+        dataframe['_avgTR'] = ta.ATR(dataframe, 1)
+        dataframe.loc[0, 'avgTR'] = dataframe.loc[0, '_avgTR']
+        for i in range(1, len(dataframe)):
+            if(i>self.Length):
+                _norm = 0.0
+                _sum = 0.0
+                for j in range(0,self.Length-1):
+                    weight = (j - i) * j
+                    _norm = _norm + weight
+                    _sum = _sum + dataframe.loc[i-self.Length+1+j,'_avgTR'] * weight
+
+                dataframe.loc[i,'avgTR'] = _sum / _norm
 
         dataframe['highestC'] = dataframe['high'].rolling(self.Length).max()
         dataframe['lowestC'] = dataframe['low'].rolling(self.Length).min()
@@ -100,16 +111,19 @@ class new_turtle(IStrategy):
 
         dataframe.loc[0, 'pos'] = dataframe.loc[0, 'ret']
         for i in range(1, len(dataframe)):
-            if dataframe.loc[i,'close']>dataframe.loc[i,'ret']:
-               dataframe.loc[i,'pos'] = 1
-            else:
-                if dataframe.loc[i,'close']<dataframe.loc[i,'ret']:
-                   dataframe.loc[i,'pos'] = -1
+            if (dataframe.loc[i,'avgTR']>0):
+                if dataframe.loc[i,'close']>dataframe.loc[i,'ret']:
+                   dataframe.loc[i,'pos'] = 1
                 else:
-                    if i==1 :
-                     dataframe.loc[i,'pos'] = 0
+                    if dataframe.loc[i,'close']<dataframe.loc[i,'ret']:
+                       dataframe.loc[i,'pos'] = -1
                     else:
-                     dataframe.loc[i,'pos'] = dataframe.loc[i-1,'pos']
+                        if i==1 :
+                         dataframe.loc[i,'pos'] = 0
+                        else:
+                         dataframe.loc[i,'pos'] = dataframe.loc[i-1,'pos']
+            else:
+                dataframe.loc[i,'pos'] = 0
 
         dataframe.loc[0, 'enterLong'] = dataframe.loc[0, 'pos']
         for i in range(1,self.bardelay):

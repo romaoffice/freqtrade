@@ -262,11 +262,14 @@ class Backtesting:
                 pair_data.loc[:, 'buy_tag'] = None  # cleanup if buy_tag is exist
                 pair_data.loc[:, 'exit_tag'] = None  # cleanup if exit_tag is exist
 
+            buysig = self.strategy.advise_buy(pair_data, {'pair': pair})
+
             df_analyzed = self.strategy.advise_sell(
-                self.strategy.advise_buy(pair_data, {'pair': pair}), {'pair': pair}).copy()
+               buysig , {'pair': pair}).copy()
             # Trim startup period from analyzed dataframe
             df_analyzed = trim_dataframe(df_analyzed, self.timerange,
                                          startup_candles=self.required_startup)
+            
             # To avoid using data from future, we use buy/sell signals shifted
             # from the previous candle
             df_analyzed.loc[:, 'entry'] = df_analyzed.loc[:, 'entry'].shift(1)
@@ -387,7 +390,6 @@ class Backtesting:
                 and len(sell_row[EXIT_TAG_IDX]) > 0
             ):
                 trade.sell_reason = sell_row[EXIT_TAG_IDX]
-            print('======= closing ',sell_row[DATE_IDX])
             trade.close(closerate, show_msg=False)
             return trade
 
@@ -451,7 +453,6 @@ class Backtesting:
 
             if(row[BUY_IDX]==-1):
                stake_amount = -stake_amount 
-            print('signal and stake====',row[DATE_IDX],row[BUY_IDX],stake_amount)
             trade = LocalTrade(
                 pair=pair,
                 open_rate=row[OPEN_IDX],
@@ -643,6 +644,7 @@ class Backtesting:
         logger.info(f'Backtesting with data from {min_date.strftime(DATETIME_PRINT_FORMAT)} '
                     f'up to {max_date.strftime(DATETIME_PRINT_FORMAT)} '
                     f'({(max_date - min_date).days} days).')
+
         # Execute backtest and store results
         results = self.backtest(
             processed=preprocessed,

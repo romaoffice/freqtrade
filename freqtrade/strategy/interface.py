@@ -669,7 +669,7 @@ class IStrategy(ABC, HyperStrategyMixin):
         current_profit = trade.calc_profit_ratio(current_rate)
 
         # if buy signal and ignore_roi is set, we don't need to evaluate min_roi.
-        roi_reached = (not (buy and self.ignore_roi_if_buy_signal)
+        roi_reached = (not (abs(buy)>0 and self.ignore_roi_if_buy_signal)
                        and self.min_roi_reached(trade=trade, current_profit=current_profit,
                                                 current_time=date))
 
@@ -707,18 +707,18 @@ class IStrategy(ABC, HyperStrategyMixin):
         # Sell-signal
         # Stoploss
         if roi_reached and stoplossflag.sell_type != SellType.STOP_LOSS:
-            logger.info(f"{trade.pair} - Required profit reached. sell_type=SellType.ROI")
+            logger.debug(f"{trade.pair} - Required profit reached. sell_type=SellType.ROI")
             return SellCheckTuple(sell_type=SellType.ROI)
 
         if sell_signal != SellType.NONE:
-            logger.info(f"{trade.pair} - Sell signal received. "
+            logger.debug(f"{trade.pair} - Sell signal received. "
                          f"sell_type=SellType.{sell_signal.name}" +
                          (f", custom_reason={custom_reason}" if custom_reason else ""))
             return SellCheckTuple(sell_type=sell_signal, sell_reason=custom_reason)
 
         if stoplossflag.sell_flag:
 
-            logger.info(f"{trade.pair} - Stoploss hit. sell_type={stoplossflag.sell_type}")
+            logger.debug(f"{trade.pair} - Stoploss hit. sell_type={stoplossflag.sell_type}")
             return stoplossflag
 
         # This one is noisy, commented out...

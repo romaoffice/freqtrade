@@ -518,7 +518,7 @@ class LocalTrade():
         """
         buy_trade = Decimal(self.amount) * Decimal(self.open_rate)
         fees = buy_trade * Decimal(self.fee_open)
-        return float(buy_trade + fees)
+        return float(buy_trade + fees) if buy_trade>0 else float(buy_trade - fees)
 
     def recalc_open_trade_value(self) -> None:
         """
@@ -542,7 +542,7 @@ class LocalTrade():
 
         sell_trade = Decimal(self.amount) * Decimal(rate or self.close_rate)  # type: ignore
         fees = sell_trade * Decimal(fee or self.fee_close)
-        return float(sell_trade - fees)
+        return float(sell_trade - fees) if sell_trade>0 else float(sell_trade + fees)
 
     def calc_profit(self, rate: Optional[float] = None,
                     fee: Optional[float] = None) -> float:

@@ -15,10 +15,7 @@ class new_turtle(IStrategy):
     # Minimal ROI designed for the strategy.
     # This attribute will be overridden if the config file contains "minimal_roi"
     minimal_roi = {
-        "60":  0.101,
-        "30":  0.103,
-        "20":  0.104,
-        "0":  0.105
+        "0": 100
     }
 
     # Optimal stoploss designed for the strategy
@@ -26,7 +23,7 @@ class new_turtle(IStrategy):
     stoploss = -30
 
     # Optimal timeframe for the strategy
-    timeframe = '1m'
+    timeframe = '1d'
 
     # trailing stoploss
     trailing_stop = False
@@ -129,12 +126,12 @@ class new_turtle(IStrategy):
                 if(dataframe.loc[i,'close']>dataframe.loc[i-j,'close']):
                     falling = False
             if dataframe.loc[i,'pos'] ==  1 and \
-               (self.trailingmenu!="Normal" or (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos'] )) and \
+               (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos'] ) and \
                rising:
                dataframe.loc[i,'enterLong']=True        
             
             if dataframe.loc[i,'pos'] ==  -1 and \
-               (self.trailingmenu!="Normal" or (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos'] )) and \
+               (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos'] ) and \
                falling:
                dataframe.loc[i,'enterShort']=True      
         

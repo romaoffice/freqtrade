@@ -2,7 +2,7 @@
 {
     "max_open_trades": 1,
     "stake_currency": "USDT",
-    "stake_amount": 15,
+    "stake_amount": 100,
     "tradable_balance_ratio": 0.99,
     "fiat_display_currency": "USD",
     "use_sell_signal": true,
@@ -47,7 +47,7 @@
             "options": {"defaultType": "future"}   // This is the important part
         },
         "pair_whitelist": [
-            "C98/USDT"
+            "BTC/USDT"
         ],
         "pair_blacklist": [
             "BNB/.*"

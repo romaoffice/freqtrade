@@ -644,8 +644,8 @@ class IStrategy(ABC, HyperStrategyMixin):
         else:
             return False
 
-    def should_sell(self, trade: Trade, rate: float, date: datetime, buy: bool,
-                    sell: bool, low: float = None, high: float = None,
+    def should_sell(self, trade: Trade, rate: float, date: datetime, buy: float,
+                    sell: float, low: float = None, high: float = None,
                     force_stoploss: float = 0) -> SellCheckTuple:
         """
         This function evaluates if one of the conditions required to trigger a sell
@@ -693,7 +693,7 @@ class IStrategy(ABC, HyperStrategyMixin):
                     sell_signal = SellType.CUSTOM_SELL
                     if isinstance(custom_reason, str):
                         if len(custom_reason) > CUSTOM_SELL_MAX_LENGTH:
-                            logger.warning(f'Custom sell reason returned from custom_sell is too '
+                            logger.info(f'Custom sell reason returned from custom_sell is too '
                                            f'long and was trimmed to {CUSTOM_SELL_MAX_LENGTH} '
                                            f'characters.')
                             custom_reason = custom_reason[:CUSTOM_SELL_MAX_LENGTH]
@@ -707,18 +707,18 @@ class IStrategy(ABC, HyperStrategyMixin):
         # Sell-signal
         # Stoploss
         if roi_reached and stoplossflag.sell_type != SellType.STOP_LOSS:
-            logger.debug(f"{trade.pair} - Required profit reached. sell_type=SellType.ROI")
+            logger.info(f"{trade.pair} - Required profit reached. sell_type=SellType.ROI")
             return SellCheckTuple(sell_type=SellType.ROI)
 
         if sell_signal != SellType.NONE:
-            logger.debug(f"{trade.pair} - Sell signal received. "
+            logger.info(f"{trade.pair} - Sell signal received. "
                          f"sell_type=SellType.{sell_signal.name}" +
                          (f", custom_reason={custom_reason}" if custom_reason else ""))
             return SellCheckTuple(sell_type=sell_signal, sell_reason=custom_reason)
 
         if stoplossflag.sell_flag:
 
-            logger.debug(f"{trade.pair} - Stoploss hit. sell_type={stoplossflag.sell_type}")
+            logger.info(f"{trade.pair} - Stoploss hit. sell_type={stoplossflag.sell_type}")
             return stoplossflag
 
         # This one is noisy, commented out...

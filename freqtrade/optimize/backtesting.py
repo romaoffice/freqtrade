@@ -248,7 +248,7 @@ class Backtesting:
         """
         # Every change to this headers list must evaluate further usages of the resulting tuple
         # and eventually change the constants for indexes at the top
-        headers = ['date', 'buy', 'open', 'close', 'sell', 'low', 'high', 'buy_tag', 'exit_tag']
+        headers = ['date', 'entry', 'open', 'close', 'exit', 'low', 'high', 'buy_tag', 'exit_tag']
         data: Dict = {}
         self.progress.init_step(BacktestState.CONVERT, len(processed))
 
@@ -257,8 +257,8 @@ class Backtesting:
             self.check_abort()
             self.progress.increment()
             if not pair_data.empty:
-                pair_data.loc[:, 'buy'] = 0  # cleanup if buy_signal is exist
-                pair_data.loc[:, 'sell'] = 0  # cleanup if sell_signal is exist
+                pair_data.loc[:, 'entry'] = 0  # cleanup if buy_signal is exist
+                pair_data.loc[:, 'exit'] = 0  # cleanup if sell_signal is exist
                 pair_data.loc[:, 'buy_tag'] = None  # cleanup if buy_tag is exist
                 pair_data.loc[:, 'exit_tag'] = None  # cleanup if exit_tag is exist
 
@@ -269,8 +269,8 @@ class Backtesting:
                                          startup_candles=self.required_startup)
             # To avoid using data from future, we use buy/sell signals shifted
             # from the previous candle
-            df_analyzed.loc[:, 'buy'] = df_analyzed.loc[:, 'buy'].shift(1)
-            df_analyzed.loc[:, 'sell'] = df_analyzed.loc[:, 'sell'].shift(1)
+            df_analyzed.loc[:, 'entry'] = df_analyzed.loc[:, 'entry'].shift(1)
+            df_analyzed.loc[:, 'exit'] = df_analyzed.loc[:, 'exit'].shift(1)
             df_analyzed.loc[:, 'buy_tag'] = df_analyzed.loc[:, 'buy_tag'].shift(1)
             df_analyzed.loc[:, 'exit_tag'] = df_analyzed.loc[:, 'exit_tag'].shift(1)
 
@@ -357,9 +357,10 @@ class Backtesting:
         sell_candle_time = sell_row[DATE_IDX].to_pydatetime()
         sell = self.strategy.should_sell(trade, sell_row[OPEN_IDX],  # type: ignore
                                          sell_candle_time, sell_row[BUY_IDX],
-                                         sell_row[SELL_IDX],
+                                         abs(sell_row[SELL_IDX])>0,
                                          low=sell_row[LOW_IDX], high=sell_row[HIGH_IDX])
-
+        if (not(sell_row[SELL_IDX]>0) and sell.sell_flag):
+            print('======= got wrong sell signal',sell_row[DATE_IDX])
         if sell.sell_flag:
             trade.close_date = sell_candle_time
 
@@ -386,7 +387,7 @@ class Backtesting:
                 and len(sell_row[EXIT_TAG_IDX]) > 0
             ):
                 trade.sell_reason = sell_row[EXIT_TAG_IDX]
-
+            print('======= closing ',sell_row[DATE_IDX])
             trade.close(closerate, show_msg=False)
             return trade
 
@@ -405,9 +406,9 @@ class Backtesting:
             if len(detail_data) == 0:
                 # Fall back to "regular" data if no detail data was found for this candle
                 return self._get_sell_trade_entry_for_candle(trade, sell_row)
-            detail_data.loc[:, 'buy'] = sell_row[BUY_IDX]
-            detail_data.loc[:, 'sell'] = sell_row[SELL_IDX]
-            headers = ['date', 'buy', 'open', 'close', 'sell', 'low', 'high']
+            detail_data.loc[:, 'entry'] = sell_row[BUY_IDX]
+            detail_data.loc[:, 'exit'] = sell_row[SELL_IDX]
+            headers = ['date', 'entry', 'open', 'close', 'exit', 'low', 'high']
             for det_row in detail_data[headers].values.tolist():
                 res = self._get_sell_trade_entry_for_candle(trade, det_row)
                 if res:
@@ -443,10 +444,14 @@ class Backtesting:
                 pair=pair, order_type=order_type, amount=stake_amount, rate=row[OPEN_IDX],
                 time_in_force=time_in_force, current_time=row[DATE_IDX].to_pydatetime()):
             return None
-
         if stake_amount and (not min_stake_amount or stake_amount > min_stake_amount):
+
             # Enter trade
             has_buy_tag = len(row) >= BUY_TAG_IDX + 1
+
+            if(row[BUY_IDX]==-1):
+               stake_amount = -stake_amount 
+            print('signal and stake====',row[DATE_IDX],row[BUY_IDX],stake_amount)
             trade = LocalTrade(
                 pair=pair,
                 open_rate=row[OPEN_IDX],
@@ -541,11 +546,9 @@ class Backtesting:
                     # missing Data for one pair at the end.
                     # Warnings for this are shown during data loading
                     continue
-
                 # Waits until the time-counter reaches the start of the data for this pair.
                 if row[DATE_IDX] > tmp:
                     continue
-
                 row_index += 1
                 indexes[pair] = row_index
                 self.dataprovider._set_dataframe_max_index(row_index)
@@ -553,31 +556,12 @@ class Backtesting:
                 # without positionstacking, we can only have one open trade per pair.
                 # max_open_trades must be respected
                 # don't open on the last row
-                if (
-                    (position_stacking or len(open_trades[pair]) == 0)
-                    and self.trade_slot_available(max_open_trades, open_trade_count_start)
-                    and tmp != end_date
-                    and row[BUY_IDX] == 1
-                    and row[SELL_IDX] != 1
-                    and not PairLocks.is_pair_locked(pair, row[DATE_IDX])
-                ):
-                    trade = self._enter_trade(pair, row)
-                    if trade:
-                        # TODO: hacky workaround to avoid opening > max_open_trades
-                        # This emulates previous behaviour - not sure if this is correct
-                        # Prevents buying if the trade-slot was freed in this candle
-                        open_trade_count_start += 1
-                        open_trade_count += 1
-                        # logger.debug(f"{pair} - Emulate creation of new trade: {trade}.")
-                        open_trades[pair].append(trade)
-                        LocalTrade.add_bt_trade(trade)
-
                 for trade in list(open_trades[pair]):
                     # also check the buying candle for sell conditions.
                     trade_entry = self._get_sell_trade_entry(trade, row)
                     # Sell occurred
                     if trade_entry:
-                        # logger.debug(f"{pair} - Backtesting sell {trade}")
+                        logger.debug(f"{pair} - Backtesting sell {trade}")
                         open_trade_count -= 1
                         open_trades[pair].remove(trade)
 
@@ -586,6 +570,27 @@ class Backtesting:
                         if enable_protections:
                             self.protections.stop_per_pair(pair, row[DATE_IDX])
                             self.protections.global_stop(tmp)
+
+                if (
+                    #(position_stacking or len(open_trades[pair]) == 0)
+                    #and self.trade_slot_available(max_open_trades, open_trade_count_start)
+                    #and tmp != end_date
+                    tmp != end_date
+                    and abs(row[BUY_IDX])>0
+                    #and row[SELL_IDX] != 1
+                    #and not PairLocks.is_pair_locked(pair, row[DATE_IDX])
+                ):
+                    trade = self._enter_trade(pair, row)
+                    if trade:
+                        # TODO: hacky workaround to avoid opening > max_open_trades
+                        # This emulates previous behaviour - not sure if this is correct
+                        # Prevents buying if the trade-slot was freed in this candle
+                        open_trade_count_start += 1
+                        open_trade_count += 1
+                        logger.debug(f"{pair} - Emulate creation of new trade: {trade}.")
+                        open_trades[pair].append(trade)
+                        LocalTrade.add_bt_trade(trade)
+
 
             # Move time one configured time_interval ahead.
             self.progress.increment()
@@ -627,7 +632,7 @@ class Backtesting:
 
         # Trim startup period from analyzed dataframe
         preprocessed_tmp = trim_dataframes(preprocessed, timerange, self.required_startup)
-
+        
         if not preprocessed_tmp:
             raise OperationalException(
                 "No data left after adjusting for startup candles.")

@@ -9,7 +9,7 @@ config = Configuration.from_files([])
 # config = Configuration.from_files(["config.json"])
 
 # Define some constants
-config["timeframe"] = "5m"
+config["timeframe"] = "1d"
 # Name of the strategy class
 config["strategy"] = "new_turtle"
 
@@ -38,3 +38,4 @@ strategy = StrategyResolver.load_strategy(config)
 # # Generate buy/sell signals using strategy
 df = strategy.analyze_ticker(candles, {'pair': pair})
 print(df.tail(n=30))
+df.to_csv('testresult.csv')

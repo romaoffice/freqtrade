@@ -9,7 +9,7 @@
     "timeframe": "1m",
     "dry_run": false,
     "cancel_open_orders_on_exit": false,
-    
+    "leverage":5,
     "unfilledtimeout": {
         "buy": 10,
         "sell": 30,

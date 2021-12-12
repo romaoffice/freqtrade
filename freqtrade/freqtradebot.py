@@ -96,6 +96,7 @@ class FreqtradeBot(LoggingMixin):
 
         self.active_pair_whitelist = self._refresh_active_whitelist()
 
+        self.exchange.setLeverage(self.active_pair_whitelist,self.config)
         # Set initial bot state from config
         initial_state = self.config.get('initial_state')
         self.state = State[initial_state.upper()] if initial_state else State.STOPPED
@@ -869,7 +870,7 @@ class FreqtradeBot(LoggingMixin):
                                    f"for pair {trade.pair}.")
 
     def _check_and_execute_exit(self, trade: Trade, 
-                                buy: bool, sell: bool, exit_tag: Optional[str]) -> bool:
+                                buy: float, sell: float, exit_tag: Optional[str]) -> bool:
         """
         Check and execute exit
         """

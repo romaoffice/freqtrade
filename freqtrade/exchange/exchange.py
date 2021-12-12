@@ -133,6 +133,7 @@ class Exchange:
         self._api = self._init_ccxt(exchange_config, ccxt_kwargs=ccxt_config)
 
         ccxt_async_config = self._ccxt_config.copy()
+
         ccxt_async_config = deep_merge_dicts(exchange_config.get('ccxt_config', {}),
                                              ccxt_async_config)
         ccxt_async_config = deep_merge_dicts(exchange_config.get('ccxt_async_config', {}),
@@ -172,6 +173,17 @@ class Exchange:
         logger.debug("Exchange object destroyed, closing async loop")
         if self._api_async and inspect.iscoroutinefunction(self._api_async.close):
             asyncio.get_event_loop().run_until_complete(self._api_async.close())
+
+    def setLeverage(self,pairs: List[str],exchange_config: Dict[str, Any]):
+        if exchange_config["leverage"]:
+            for pair in pairs:
+                market = self._markets[pair]
+                response = self._api.fapiPrivate_post_leverage({
+                    "symbol": market['id'],  # convert a unified CCXT symbol to an exchange-specific market id
+                    # "symbol": "BTCUSDT",  # same thing, note there's no slash in the exchange-specific id
+                    "leverage": exchange_config["leverage"]
+                })
+                print('set leverage',response)
 
     def _init_ccxt(self, exchange_config: Dict[str, Any], ccxt_module: CcxtModuleType = ccxt,
                    ccxt_kwargs: Dict = {}) -> ccxt.Exchange:

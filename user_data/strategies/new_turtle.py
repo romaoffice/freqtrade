@@ -47,11 +47,11 @@ class new_turtle(IStrategy):
     Length = 28
     Multiplier = 3.11
     bardelay = 2
-    trailingmenu = "None"#options=["Normal","Re-entries","None"]
-    trailinmode = "Auto"#options=["Auto","Custom"]
+    trailingmenu = "Normal"#options=["Normal","Re-entries","None"]
+    trailinmode = "Custom"#options=["Auto","Custom"]
     usetrail = True if trailingmenu!="None" else False
-    longTrailPerc = 5*0.01
-    shortTrailPerc = 5 * 0.01
+    longTrailPerc = 6.58*0.01
+    shortTrailPerc = 5.76 * 0.01
 
     def informative_pairs(self):
         """
@@ -128,12 +128,20 @@ class new_turtle(IStrategy):
         dataframe.loc[0, 'rising'] = dataframe.loc[0, 'pos']
         dataframe.loc[0, 'falling'] = dataframe.loc[0, 'pos']
         dataframe.loc[0, 'enterLong'] = dataframe.loc[0, 'pos']
+        dataframe.loc[0, 'enterShort'] = dataframe.loc[0, 'pos']
         dataframe.loc[0, 'trade'] = dataframe.loc[0, 'pos']
+        dataframe.loc[0, 'longStopPrice'] = dataframe.loc[0, 'pos']
+        dataframe.loc[0, 'shortStopPrice'] = dataframe.loc[0, 'pos']
+        dataframe.loc[0, 'Long_exit'] = dataframe.loc[0, 'pos']
+        dataframe.loc[0, 'Short_exit'] = dataframe.loc[0, 'pos']
 
-        for i in range(0,self.bardelay):
+        for i in range(1, len(dataframe)):
             dataframe.loc[i,'enterLong']=False        
-            dataframe.loc[i,'enterShort']=False        
-        for i in range(1+self.bardelay, len(dataframe)):
+            dataframe.loc[i,'enterShort']=False
+            dataframe.loc[i,'Long_exit']=False        
+            dataframe.loc[i,'Short_exit']=False
+            if(i<self.bardelay):
+                continue
             rising = True
             falling = True
             for j in range(1,self.bardelay+1):
@@ -144,8 +152,6 @@ class new_turtle(IStrategy):
             dataframe.loc[i, 'rising'] = rising
             dataframe.loc[i, 'falling'] = falling
 
-            dataframe.loc[i,'enterLong']=False        
-            dataframe.loc[i,'enterShort']=False
             if dataframe.loc[i,'pos'] ==  1 and \
                (self.trailingmenu != "Normal" or (i>1 and dataframe.loc[i,'pos']!=dataframe.loc[i-1,'pos']) ) and \
                dataframe.loc[i, 'rising'] and \
@@ -168,14 +174,6 @@ class new_turtle(IStrategy):
                      dataframe.loc[i,'trade'] = 0
                     else:
                      dataframe.loc[i,'trade'] = dataframe.loc[i-1,'trade']
-        
-            
-        dataframe.loc[0, 'longStopPrice'] = dataframe.loc[0, 'pos']
-        dataframe.loc[0, 'shortStopPrice'] = dataframe.loc[0, 'pos']
-        dataframe.loc[0, 'Long_exit'] = dataframe.loc[0, 'pos']
-        dataframe.loc[0, 'Short_exit'] = dataframe.loc[0, 'pos']
-
-        for i in range(0, len(dataframe)):
 
             if(dataframe.loc[i,'trade']==1):
                 stopValue = 0.0
@@ -251,11 +249,11 @@ class new_turtle(IStrategy):
         """
         dataframe.loc[
             (
-                (dataframe['enterLong']  | \
-                 dataframe['enterShort'] | \
-                 dataframe['Long_exit'] | \
-                 dataframe['Short_exit'] \
-                    )
+                ((dataframe['enterLong']==True ) |  \
+                 (dataframe['enterShort']==True) |  \
+                 (dataframe['Long_exit']==True) |  \
+                 (dataframe['Short_exit']==True) \
+                )
             ),
             'exit'] = 1#-1.
         return dataframe

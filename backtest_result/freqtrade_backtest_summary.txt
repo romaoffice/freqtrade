@@ -1,49 +1,55 @@
+Tradingview result :
+  120.88%
+Freqtrade result:
+  122.26%
+
 Initial param:
     Length = 28
     Multiplier = 3.11
     bardelay = 2
-    trailingmenu = "None"#options=["Normal","Re-entries","None"]
-    trailinmode = "Auto"#options=["Auto","Custom"]
+    trailingmenu = "Normal"#options=["Normal","Re-entries","None"]
+    trailinmode = "Custom"#options=["Auto","Custom"]
     usetrail = True if trailingmenu!="None" else False
-    longTrailPerc = 5*0.01
-    shortTrailPerc = 5 * 0.01
+    longTrailPerc = 6.58*0.01
+    shortTrailPerc = 5.76 * 0.01
 
 =============== SUMMARY METRICS ================
 | Metric                 | Value               |
 |------------------------+---------------------|
-| Backtesting from       | 2019-10-10 00:00:00 |
+| Backtesting from       | 2019-09-08 00:00:00 |
 | Backtesting to         | 2021-12-10 00:00:00 |
 | Max open trades        | 1                   |
 |                        |                     |
-| Total/Daily Avg Trades | 27 / 0.03           |
+| Total/Daily Avg Trades | 16 / 0.02           |
 | Starting balance       | 100000.000 USDT     |
-| Final balance          | 811191.651 USDT     |
-| Absolute profit        | 711191.651 USDT     |
-| Total profit %         | 711.19%             |
-| Trades per day         | 0.03                |
-| Avg. daily profit %    | 0.86%               |
-| Avg. stake amount      | -28229.447 USDT     |
-| Total trade volume     | -762195.068 USDT    |
+| Final balance          | 222264.705 USDT     |
+| Absolute profit        | 122264.705 USDT     |
+| Total profit %         | 122.26%             |
+| Trades per day         | 0.02                |
+| Avg. daily profit %    | 0.15%               |
+| Avg. stake amount      | -4679.267 USDT      |
+| Total trade volume     | -74868.272 USDT     |
 |                        |                     |
-| Best Pair              | BTC/USDT 505.42%    |
-| Worst Pair             | BTC/USDT 505.42%    |
-| Best trade             | BTC/USDT 407.83%    |
-| Worst trade            | BTC/USDT -21.24%    |
-| Best day               | 657301.576 USDT     |
-| Worst day              | -163926.323 USDT    |
-| Days win/draw/lose     | 11 / 749 / 16       |
-| Avg. Duration Winners  | 53 days, 15:16:00   |
-| Avg. Duration Loser    | 12 days, 12:00:00   |
+| Best Pair              | BTC/USDT 95.80%     |
+| Worst Pair             | BTC/USDT 95.80%     |
+| Best trade             | BTC/USDT 34.10%     |
+| Worst trade            | BTC/USDT -6.32%     |
+| Best day               | 43017.279 USDT      |
+| Worst day              | -8327.996 USDT      |
+| Days win/draw/lose     | 8 / 728 / 8         |
+| Avg. Duration Winners  | 13 days, 9:00:00    |
+| Avg. Duration Loser    | 5 days, 6:00:00     |
 | Rejected Buy signals   | 0                   |
 |                        |                     |
-| Min balance            | 77710.660 USDT      |
-| Max balance            | 820067.318 USDT     |
-| Drawdown               | 30.90%              |
-| Drawdown               | 280539.059 USDT     |
-| Drawdown high          | 720067.318 USDT     |
-| Drawdown low           | 439528.259 USDT     |
-| Drawdown Start         | 2021-04-19 00:00:00 |
-| Drawdown End           | 2021-10-02 00:00:00 |
+| Min balance            | 83577.175 USDT      |
+| Max balance            | 222264.705 USDT     |
+| Drawdown               | 14.26%              |
+| Drawdown               | 15932.355 USDT      |
+| Drawdown high          | 46959.981 USDT      |
+| Drawdown low           | 31027.626 USDT      |
+| Drawdown Start         | 2021-04-23 00:00:00 |
+| Drawdown End           | 2021-06-18 00:00:00 |
 | Market change          | 353.60%             |
 ================================================
+
 

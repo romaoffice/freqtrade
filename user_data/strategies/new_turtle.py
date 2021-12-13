@@ -47,7 +47,7 @@ class new_turtle(IStrategy):
     Length = 28
     Multiplier = 3.11
     bardelay = 2
-    trailingmenu = "Normal"#options=["Normal","Re-entries","None"]
+    trailingmenu = "Re-entries"#options=["Normal","Re-entries","None"]
     trailinmode = "Custom"#options=["Auto","Custom"]
     usetrail = True if trailingmenu!="None" else False
     longTrailPerc = 6.58*0.01
@@ -206,13 +206,13 @@ class new_turtle(IStrategy):
                 dataframe.loc[i, 'shortStopPrice'] = 999999
 
             dataframe.loc[i, 'Long_exit'] = False
-            if(dataframe.loc[i, 'trade']==1 and self.usetrail and \
+            if(dataframe.loc[i, 'enterLong']!=True and dataframe.loc[i, 'trade']==1 and self.usetrail and \
                 dataframe.loc[i, 'low']<dataframe.loc[i, 'longStopPrice'] and \
                 dataframe.loc[i, 'open']>dataframe.loc[i, 'longStopPrice'] 
                 ):
                 dataframe.loc[i, 'Long_exit'] = True
             dataframe.loc[i, 'Short_exit'] = False
-            if(dataframe.loc[i, 'trade']==-1 and self.usetrail and \
+            if(dataframe.loc[i, 'enterShort']!=True and dataframe.loc[i, 'trade']==-1 and self.usetrail and \
                 dataframe.loc[i, 'high']>dataframe.loc[i, 'shortStopPrice'] and \
                 dataframe.loc[i, 'open']<dataframe.loc[i, 'shortStopPrice'] 
                 ):
